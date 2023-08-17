@@ -1,7 +1,7 @@
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 const List = (props) => {
-  const { list, itemEdited, removeItem, editItem, updateStatus } = props;
+  const { list, removeItem, editItem, updateStatus } = props;
 
   return (
     <div className="grocery-list">
