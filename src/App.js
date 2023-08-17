@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import GroceryForm from "./GroceryForm";
 import List from "./List";
-import Alert from "./Alert";
 
 function getListFromLocalStorage() {
   const itemList = localStorage.getItem("list");
@@ -11,103 +13,107 @@ function getListFromLocalStorage() {
   }
 }
 
-function App() {
-  const [item, setItem] = useState("");
+const App = () => {
   const [list, setList] = useState(getListFromLocalStorage());
   const [isEditing, setIsEditing] = useState(false);
   const [editID, setEditID] = useState(null);
-  const [alert, setAlert] = useState({ show: false, msg: "", type: "" });
+  const [itemEdited, setItemEdited] = useState(null);
 
-  useEffect(() => {
+  const setLocalStorage = () => {
     localStorage.setItem("list", JSON.stringify(list));
-  }, [list]);
+  };
 
-  function showAlert(show = false, msg = "", type = "") {
-    setAlert({ show, msg, type });
-  }
+  const addItemToList = (newItem) => {
+    setList([...list, newItem]);
+    setLocalStorage();
+    toast.success("Item added to the list");
+  };
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    if (item === "") {
-      showAlert(true, "Please enter the item", "danger");
-    } else {
-      if (isEditing) {
-        setList(
-          list.map((listItem) => {
-            if (listItem.id === editID) {
-              return { ...listItem, item: item };
-            } else {
-              return listItem;
-            }
-          })
-        );
-        setItem("");
-        setIsEditing(false);
-        setEditID(null);
-        showAlert(true, "Item edited in the list", "success");
-      } else {
-        const newItem = { id: new Date().getTime().toString(), item: item };
-        setList([...list, newItem]);
-        setItem("");
-        showAlert(true, "Item added to the list", "success");
-      }
-    }
-  }
-
-  function clearAllItems() {
+  const clearAllItems = () => {
     setList([]);
-    showAlert(true, "All items removed from the list", "danger");
-  }
+    setLocalStorage();
+    toast.error("All items removed from the list");
+  };
 
-  function removeItem(id) {
+  const removeItem = (itemId) => {
     setList(
       list.filter((listItem) => {
-        return listItem.id !== id;
+        return listItem.id !== itemId;
       })
     );
-    showAlert(true, "Item removed from the list", "danger");
-  }
+    setLocalStorage();
+    toast.error("Item removed from the list");
+  };
 
-  function editItem(id) {
-    const itemSelected = list.find((listItem) => {
-      return listItem.id === id;
-    });
+  const editItem = (itemId, item) => {
     setIsEditing(true);
-    setEditID(id);
-    setItem(itemSelected.item);
-  }
+    setEditID(itemId);
+    setItemEdited(item);
+  };
+
+  const editItemInList = (item) => {
+    const itemsList = list.map((listItem) => {
+      if (listItem.id === editID) {
+        return { ...listItem, item: item };
+      } else {
+        return listItem;
+      }
+    });
+    setList(itemsList);
+    setLocalStorage();
+    setIsEditing(false);
+    setEditID(null);
+    setItemEdited(null);
+    toast.success("Item edited in the list");
+  };
+
+  const updateStatus = (itemId) => {
+    const itemsList = list.map((listItem) => {
+      if (listItem.id === itemId) {
+        return { ...listItem, completed: !listItem.completed };
+      } else {
+        return listItem;
+      }
+    });
+    setList(itemsList);
+    setLocalStorage();
+    toast.success("Item status updated");
+  };
 
   return (
     <section className="section-center">
-      <form className="grocery-form" onSubmit={handleSubmit}>
-        {alert.show && <Alert {...alert} removeAlert={showAlert} list={list} />}
-        <h3>Grocery List</h3>
-        <div className="form-control">
-          <input
-            type="text"
-            className="grocery"
-            placeholder="e.g. Eggs"
-            name="item"
-            value={item}
-            onChange={(event) => {
-              setItem(event.target.value);
-            }}
-          />
-          <button type="submit" className="submit-btn">
-            {isEditing ? "Edit" : "Submit"}
-          </button>
-        </div>
-      </form>
+      <GroceryForm
+        isEditing={isEditing}
+        itemEdited={itemEdited}
+        addItemToList={addItemToList}
+        editItemInList={editItemInList}
+      />
       {list.length > 0 && (
         <div className="grocery-container">
-          <List list={list} removeItem={removeItem} editItem={editItem} />
+          <List
+            list={list}
+            removeItem={removeItem}
+            editItem={editItem}
+            updateStatus={updateStatus}
+          />
           <button className="clear-btn" onClick={clearAllItems}>
             Clear All Items
           </button>
         </div>
       )}
+      <ToastContainer
+        position="top-center"
+        autoClose={1000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </section>
   );
-}
+};
 
 export default App;

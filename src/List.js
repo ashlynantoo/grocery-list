@@ -1,19 +1,29 @@
-import React from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
+
 const List = (props) => {
-  const { list, removeItem, editItem } = props;
+  const { list, itemEdited, removeItem, editItem, updateStatus } = props;
+
   return (
     <div className="grocery-list">
       {list.map((listItem) => {
-        const { id, item } = listItem;
+        const { id, item, completed } = listItem;
         return (
           <article key={id} className="grocery-item">
-            <p className="title">{item}</p>
+            <div className="item">
+              <input
+                type="checkbox"
+                checked={completed}
+                onChange={() => updateStatus(id)}
+              />
+              <p className={completed ? "title line-through" : "title"}>
+                {item}
+              </p>
+            </div>
             <div className="btn-container">
               <button
                 className="edit-btn"
                 onClick={() => {
-                  editItem(id);
+                  editItem(id, item);
                 }}
               >
                 <FaEdit />
